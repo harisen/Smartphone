@@ -28,12 +28,17 @@ body {
     margin-bottom: 30px;
 }
 
+.header-controls {
+    display: flex;
+    gap: 10px;
+}
+
 h1 {
     color: #333;
     margin: 0;
 }
 
-.theme-toggle {
+.theme-toggle, .pomodoro-toggle, .fullscreen-toggle {
     background: none;
     border: 2px solid #333;
     border-radius: 50%;
@@ -51,6 +56,68 @@ h1 {
 .theme-toggle:hover {
     background-color: #f0f0f0;
     transform: rotate(20deg);
+}
+
+.pomodoro-toggle:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+.pomodoro-toggle.active {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.fullscreen-toggle:hover {
+    background-color: #f0f0f0;
+    transform: scale(1.1);
+}
+
+body.fullscreen {
+    overflow: hidden;
+}
+
+body.fullscreen .container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-width: 100%;
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+body.fullscreen .timer-display {
+    font-size: 120px;
+}
+
+body.fullscreen .progress-ring {
+    width: 300px;
+    height: 300px;
+}
+
+body.fullscreen .preset-timers,
+body.fullscreen .message-settings,
+body.fullscreen .sound-settings,
+body.fullscreen .timer-history,
+body.fullscreen .keyboard-shortcuts {
+    display: none;
+}
+
+.pomodoro-status {
+    font-size: 18px;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+.pomodoro-status span {
+    font-weight: bold;
+    color: #e74c3c;
 }
 
 body.dark-mode {
@@ -76,6 +143,20 @@ body.dark-mode .preset-timers {
     background-color: #3a3a3a;
 }
 
+body.dark-mode .message-settings {
+    background-color: #3a3a3a;
+}
+
+body.dark-mode .message-settings h3 {
+    color: #f39c12;
+}
+
+body.dark-mode .message-settings input[type="text"] {
+    background-color: #4a4a4a;
+    color: #f0f0f0;
+    border-color: #5a5a5a;
+}
+
 body.dark-mode .sound-settings {
     background-color: #3a3a3a;
 }
@@ -87,13 +168,26 @@ body.dark-mode select {
     border-color: #5a5a5a;
 }
 
-body.dark-mode .theme-toggle {
+body.dark-mode .theme-toggle,
+body.dark-mode .pomodoro-toggle,
+body.dark-mode .fullscreen-toggle {
     border-color: #f0f0f0;
     color: #f0f0f0;
 }
 
-body.dark-mode .theme-toggle:hover {
+body.dark-mode .theme-toggle:hover,
+body.dark-mode .pomodoro-toggle:hover,
+body.dark-mode .fullscreen-toggle:hover {
     background-color: #3a3a3a;
+}
+
+body.dark-mode .pomodoro-toggle.active {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+body.dark-mode .pomodoro-status {
+    color: #bdc3c7;
 }
 
 body.dark-mode .progress-ring__circle {
@@ -278,6 +372,36 @@ input[type="number"] {
 
 #savePresetBtn:hover {
     background-color: #1abc9c;
+}
+
+.message-settings {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #fff3cd;
+    border-radius: 10px;
+}
+
+.message-settings h3 {
+    margin-bottom: 15px;
+    color: #856404;
+}
+
+.message-settings input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ffeaa7;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#saveMessageBtn {
+    background-color: #f39c12;
+    width: 100%;
+}
+
+#saveMessageBtn:hover {
+    background-color: #e67e22;
 }
 
 .sound-settings {

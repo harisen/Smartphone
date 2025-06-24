@@ -15,9 +15,16 @@
     <div class="container">
         <div class="header">
             <h1>Timer</h1>
-            <button id="themeToggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
+            <div class="header-controls">
+                <button id="pomodoroBtn" class="pomodoro-toggle" title="Toggle Pomodoro mode">🍅</button>
+                <button id="fullscreenBtn" class="fullscreen-toggle" title="Toggle fullscreen">⛶</button>
+                <button id="themeToggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
+            </div>
         </div>
         <div class="timer-display" id="display">00:00:00</div>
+        <div class="pomodoro-status" id="pomodoroStatus" style="display: none;">
+            <span id="pomodoroPhase">Work</span> - Session <span id="pomodoroSession">1</span>
+        </div>
         <div class="progress-container">
             <svg class="progress-ring" width="200" height="200">
                 <circle class="progress-ring__circle" stroke="#e0e0e0" stroke-width="10" fill="transparent" r="90" cx="100" cy="100"/>
@@ -54,6 +61,11 @@
                 <button id="savePresetBtn">Save Current Time as Preset</button>
             </div>
         </div>
+        <div class="message-settings">
+            <h3>Custom Message</h3>
+            <input type="text" id="customMessage" placeholder="Enter custom completion message" maxlength="100">
+            <button id="saveMessageBtn">Save Message</button>
+        </div>
         <div class="sound-settings">
             <h3>Sound Settings</h3>
             <label>
@@ -64,6 +76,15 @@
                 Volume:
                 <input type="range" id="volumeSlider" min="0" max="100" value="50">
                 <span id="volumeDisplay">50%</span>
+            </label>
+            <label>
+                Sound Theme:
+                <select id="soundTheme">
+                    <option value="default">Default</option>
+                    <option value="nature">Nature</option>
+                    <option value="digital">Digital</option>
+                    <option value="classic">Classic</option>
+                </select>
             </label>
             <label>
                 Alarm Sound:
@@ -90,6 +111,7 @@
                 <li><kbd>2</kbd> - Set 5 minutes</li>
                 <li><kbd>3</kbd> - Set 10 minutes</li>
                 <li><kbd>D</kbd> - Toggle dark mode</li>
+                <li><kbd>F</kbd> - Toggle fullscreen</li>
             </ul>
         </div>
     </div>
