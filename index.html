@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Timer</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3498db">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Timer">
 </head>
 <body>
     <div class="container">
-        <h1>Timer</h1>
+        <div class="header">
+            <h1>Timer</h1>
+            <button id="themeToggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
+        </div>
         <div class="timer-display" id="display">00:00:00</div>
         <div class="controls">
             <button id="startBtn">Start</button>
@@ -21,7 +29,51 @@
             <input type="number" id="seconds" placeholder="S" min="0" max="59">
             <button id="setBtn">Set Time</button>
         </div>
+        <div class="preset-timers">
+            <h3>Preset Timers</h3>
+            <div class="preset-buttons">
+                <button class="preset-btn" data-time="60">1 min</button>
+                <button class="preset-btn" data-time="300">5 min</button>
+                <button class="preset-btn" data-time="600">10 min</button>
+                <button class="preset-btn" data-time="900">15 min</button>
+                <button class="preset-btn" data-time="1800">30 min</button>
+                <button class="preset-btn" data-time="3600">1 hour</button>
+            </div>
+            <div class="custom-presets">
+                <h4>Custom Presets</h4>
+                <div id="customPresetsList"></div>
+                <button id="savePresetBtn">Save Current Time as Preset</button>
+            </div>
+        </div>
+        <div class="sound-settings">
+            <h3>Sound Settings</h3>
+            <label>
+                <input type="checkbox" id="soundEnabled" checked>
+                Enable Sound
+            </label>
+            <label>
+                Volume:
+                <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                <span id="volumeDisplay">50%</span>
+            </label>
+            <label>
+                Alarm Sound:
+                <select id="soundSelect">
+                    <option value="beep">Beep</option>
+                    <option value="bell">Bell</option>
+                    <option value="chime">Chime</option>
+                </select>
+            </label>
+            <button id="testSoundBtn">Test Sound</button>
+        </div>
     </div>
     <script src="js/timer.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => console.log('ServiceWorker registered'))
+                .catch(error => console.log('ServiceWorker registration failed:', error));
+        }
+    </script>
 </body>
 </html>
