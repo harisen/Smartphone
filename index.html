@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Timer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Timer</h1>
+        <div class="timer-display" id="display">00:00:00</div>
+        <div class="controls">
+            <button id="startBtn">Start</button>
+            <button id="pauseBtn">Pause</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+        <div class="timer-input">
+            <input type="number" id="hours" placeholder="H" min="0" max="23">
+            <input type="number" id="minutes" placeholder="M" min="0" max="59">
+            <input type="number" id="seconds" placeholder="S" min="0" max="59">
+            <button id="setBtn">Set Time</button>
+        </div>
+    </div>
+    <script src="js/timer.js"></script>
+</body>
+</html>
