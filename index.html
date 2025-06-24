@@ -18,6 +18,15 @@
             <button id="themeToggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
         </div>
         <div class="timer-display" id="display">00:00:00</div>
+        <div class="progress-container">
+            <svg class="progress-ring" width="200" height="200">
+                <circle class="progress-ring__circle" stroke="#e0e0e0" stroke-width="10" fill="transparent" r="90" cx="100" cy="100"/>
+                <circle class="progress-ring__progress" stroke="#3498db" stroke-width="10" fill="transparent" r="90" cx="100" cy="100"/>
+            </svg>
+            <div class="progress-bar">
+                <div class="progress-bar__fill" id="progressBar"></div>
+            </div>
+        </div>
         <div class="controls">
             <button id="startBtn">Start</button>
             <button id="pauseBtn">Pause</button>
@@ -65,6 +74,23 @@
                 </select>
             </label>
             <button id="testSoundBtn">Test Sound</button>
+        </div>
+        <div class="timer-history">
+            <h3>Timer History</h3>
+            <div id="historyList"></div>
+            <button id="clearHistoryBtn">Clear History</button>
+        </div>
+        <div class="keyboard-shortcuts">
+            <h3>Keyboard Shortcuts</h3>
+            <ul>
+                <li><kbd>Space</kbd> - Start/Pause timer</li>
+                <li><kbd>R</kbd> - Reset timer</li>
+                <li><kbd>S</kbd> - Set timer from inputs</li>
+                <li><kbd>1</kbd> - Set 1 minute</li>
+                <li><kbd>2</kbd> - Set 5 minutes</li>
+                <li><kbd>3</kbd> - Set 10 minutes</li>
+                <li><kbd>D</kbd> - Toggle dark mode</li>
+            </ul>
         </div>
     </div>
     <script src="js/timer.js"></script>

@@ -1,5 +1,6 @@
 let timerInterval = null;
 let totalSeconds = 0;
+let initialSeconds = 0;
 let isRunning = false;
 
 const display = document.getElementById('display');
@@ -20,6 +21,16 @@ const testSoundBtn = document.getElementById('testSoundBtn');
 const savePresetBtn = document.getElementById('savePresetBtn');
 const customPresetsList = document.getElementById('customPresetsList');
 const themeToggle = document.getElementById('themeToggle');
+
+const progressBar = document.getElementById('progressBar');
+const progressRing = document.querySelector('.progress-ring__progress');
+const radius = progressRing.r.baseVal.value;
+const circumference = radius * 2 * Math.PI;
+progressRing.style.strokeDasharray = `${circumference} ${circumference}`;
+progressRing.style.strokeDashoffset = circumference;
+
+const historyList = document.getElementById('historyList');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -87,11 +98,31 @@ function updateDisplay() {
     const seconds = totalSeconds % 60;
     
     display.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    updateProgress();
+}
+
+function updateProgress() {
+    if (initialSeconds > 0) {
+        const progress = (initialSeconds - totalSeconds) / initialSeconds;
+        const progressPercent = progress * 100;
+        
+        progressBar.style.width = `${progressPercent}%`;
+        
+        const offset = circumference - (progress * circumference);
+        progressRing.style.strokeDashoffset = offset;
+    } else {
+        progressBar.style.width = '0%';
+        progressRing.style.strokeDashoffset = circumference;
+    }
 }
 
 function startTimer() {
-    if (!isRunning) {
+    if (!isRunning && totalSeconds > 0) {
         isRunning = true;
+        if (initialSeconds === 0) {
+            initialSeconds = totalSeconds;
+        }
         timerInterval = setInterval(() => {
             if (totalSeconds > 0) {
                 totalSeconds--;
@@ -100,6 +131,8 @@ function startTimer() {
                 if (totalSeconds === 0) {
                     pauseTimer();
                     playAlarmSound();
+                    showNotification();
+                    saveToHistory(initialSeconds);
                     setTimeout(() => {
                         alert('Timer finished!');
                     }, 100);
@@ -120,6 +153,7 @@ function pauseTimer() {
 function resetTimer() {
     pauseTimer();
     totalSeconds = 0;
+    initialSeconds = 0;
     updateDisplay();
 }
 
@@ -129,6 +163,7 @@ function setTimer() {
     const seconds = parseInt(secondsInput.value) || 0;
     
     totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    initialSeconds = 0;
     updateDisplay();
     
     hoursInput.value = '';
@@ -186,6 +221,7 @@ function saveCustomPreset() {
 
 window.setPresetTime = function(seconds) {
     totalSeconds = seconds;
+    initialSeconds = 0;
     updateDisplay();
 };
 
@@ -199,6 +235,7 @@ window.deletePreset = function(index) {
 document.querySelectorAll('.preset-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         totalSeconds = parseInt(btn.dataset.time);
+        initialSeconds = 0;
         updateDisplay();
     });
 });
@@ -220,6 +257,75 @@ function toggleTheme() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
 
+function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function showNotification() {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        const notification = new Notification('Timer Finished!', {
+            body: 'Your timer has completed.',
+            icon: '/icon-192.svg',
+            badge: '/icon-192.svg',
+            vibrate: [200, 100, 200]
+        });
+        
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+    }
+}
+
+function saveToHistory(duration) {
+    const history = JSON.parse(localStorage.getItem('timerHistory') || '[]');
+    const now = new Date();
+    
+    history.unshift({
+        duration: duration,
+        timestamp: now.getTime(),
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString()
+    });
+    
+    if (history.length > 20) {
+        history.pop();
+    }
+    
+    localStorage.setItem('timerHistory', JSON.stringify(history));
+    loadHistory();
+}
+
+function loadHistory() {
+    const history = JSON.parse(localStorage.getItem('timerHistory') || '[]');
+    historyList.innerHTML = '';
+    
+    history.forEach(item => {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        
+        const timeText = formatTime(item.duration);
+        
+        historyItem.innerHTML = `
+            <div>
+                <span class="time">${timeText}</span>
+            </div>
+            <div class="date">${item.date} ${item.time}</div>
+        `;
+        
+        historyList.appendChild(historyItem);
+    });
+}
+
+function clearHistory() {
+    if (confirm('Clear all timer history?')) {
+        localStorage.removeItem('timerHistory');
+        loadHistory();
+    }
+}
+
 themeToggle.addEventListener('click', toggleTheme);
 
 savePresetBtn.addEventListener('click', saveCustomPreset);
@@ -236,7 +342,39 @@ startBtn.addEventListener('click', startTimer);
 pauseBtn.addEventListener('click', pauseTimer);
 resetBtn.addEventListener('click', resetTimer);
 setBtn.addEventListener('click', setTimer);
+clearHistoryBtn.addEventListener('click', clearHistory);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        if (isRunning) {
+            pauseTimer();
+        } else if (totalSeconds > 0) {
+            startTimer();
+        }
+    } else if (e.key === 'r' || e.key === 'R') {
+        resetTimer();
+    } else if (e.key === 's' || e.key === 'S') {
+        setTimer();
+    } else if (e.key === '1') {
+        totalSeconds = 60;
+        initialSeconds = 0;
+        updateDisplay();
+    } else if (e.key === '2') {
+        totalSeconds = 300;
+        initialSeconds = 0;
+        updateDisplay();
+    } else if (e.key === '3') {
+        totalSeconds = 600;
+        initialSeconds = 0;
+        updateDisplay();
+    } else if (e.key === 'd' || e.key === 'D') {
+        toggleTheme();
+    }
+});
 
 initTheme();
 loadCustomPresets();
+loadHistory();
 updateDisplay();
+requestNotificationPermission();
