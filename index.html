@@ -16,6 +16,7 @@
         <div class="header">
             <h1>Timer</h1>
             <div class="header-controls">
+                <button id="langToggle" class="lang-toggle" title="Toggle language">EN</button>
                 <button id="pomodoroBtn" class="pomodoro-toggle" title="Toggle Pomodoro mode">🍅</button>
                 <button id="fullscreenBtn" class="fullscreen-toggle" title="Toggle fullscreen">⛶</button>
                 <button id="themeToggle" class="theme-toggle" title="Toggle dark mode">🌙</button>
@@ -101,6 +102,39 @@
             <div id="historyList"></div>
             <button id="clearHistoryBtn">Clear History</button>
         </div>
+        <div class="data-management">
+            <h3>Data Management</h3>
+            <div class="export-import">
+                <button id="exportBtn">Export Data</button>
+                <button id="importBtn">Import Data</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+            </div>
+        </div>
+        <div class="statistics">
+            <h3>Usage Statistics</h3>
+            <div class="stats-controls">
+                <button class="stats-btn active" data-period="day">Daily</button>
+                <button class="stats-btn" data-period="week">Weekly</button>
+                <button class="stats-btn" data-period="month">Monthly</button>
+            </div>
+            <div class="stats-container">
+                <canvas id="statsChart" width="400" height="200"></canvas>
+                <div class="stats-summary">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Sessions:</span>
+                        <span class="stat-value" id="totalSessions">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Time:</span>
+                        <span class="stat-value" id="totalTime">0h 0m</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Average Session:</span>
+                        <span class="stat-value" id="avgSession">0m</span>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="keyboard-shortcuts">
             <h3>Keyboard Shortcuts</h3>
             <ul>
@@ -115,6 +149,7 @@
             </ul>
         </div>
     </div>
+    <script src="js/lang.js"></script>
     <script src="js/timer.js"></script>
     <script>
         if ('serviceWorker' in navigator) {

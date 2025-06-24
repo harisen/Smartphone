@@ -37,6 +37,7 @@ const pomodoroStatus = document.getElementById('pomodoroStatus');
 const pomodoroPhaseEl = document.getElementById('pomodoroPhase');
 const pomodoroSessionEl = document.getElementById('pomodoroSession');
 const fullscreenBtn = document.getElementById('fullscreenBtn');
+const langToggle = document.getElementById('langToggle');
 
 const progressBar = document.getElementById('progressBar');
 const progressRing = document.querySelector('.progress-ring__progress');
@@ -50,6 +51,14 @@ const clearHistoryBtn = document.getElementById('clearHistoryBtn');
 
 const customMessageInput = document.getElementById('customMessage');
 const saveMessageBtn = document.getElementById('saveMessageBtn');
+
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const importFile = document.getElementById('importFile');
+
+const statsChart = document.getElementById('statsChart');
+const ctx = statsChart.getContext('2d');
+let currentStatsPeriod = 'day';
 
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -212,11 +221,12 @@ function startTimer() {
                 if (totalSeconds === 60 && !warningPlayed60) {
                     playWarningSound();
                     warningPlayed60 = true;
-                    showNotification('Timer Warning', '1 minute remaining!');
+                    display.classList.add('warning');
+                    showNotification('Timer Warning', getText('warningMinute'));
                 } else if (totalSeconds === 30 && !warningPlayed30) {
                     playWarningSound();
                     warningPlayed30 = true;
-                    showNotification('Timer Warning', '30 seconds remaining!');
+                    showNotification('Timer Warning', getText('warningSeconds'));
                 }
                 
                 if (totalSeconds === 0) {
@@ -228,7 +238,7 @@ function startTimer() {
                     if (pomodoroMode) {
                         handlePomodoroPhaseEnd();
                     } else {
-                        const customMessage = localStorage.getItem('customTimerMessage') || 'Timer finished!';
+                        const customMessage = localStorage.getItem('customTimerMessage') || getText('timerFinished');
                         setTimeout(() => {
                             alert(customMessage);
                         }, 100);
@@ -246,6 +256,7 @@ function pauseTimer() {
         timerInterval = null;
     }
     document.title = 'Simple Timer';
+    display.classList.remove('warning');
 }
 
 function resetTimer() {
@@ -281,7 +292,7 @@ function loadCustomPresets() {
         
         presetItem.innerHTML = `
             <span>${timeText}</span>
-            <button onclick="setPresetTime(${preset})">Use</button>
+            <button onclick="setPresetTime(${preset})">${getText('use')}</button>
             <button onclick="deletePreset(${index})">×</button>
         `;
         
@@ -304,7 +315,7 @@ function formatTime(seconds) {
 
 function saveCustomPreset() {
     if (totalSeconds === 0) {
-        alert('Please set a timer first!');
+        alert(getText('setTimerFirst'));
         return;
     }
     
@@ -375,12 +386,15 @@ function requestNotificationPermission() {
     }
 }
 
-function showNotification(title = 'Timer Finished!', body = null) {
+function showNotification(title = null, body = null) {
     if ('Notification' in window && Notification.permission === 'granted') {
-        if (!body && title === 'Timer Finished!') {
-            body = localStorage.getItem('customTimerMessage') || 'Your timer has completed.';
+        if (!title) {
+            title = getText('timerFinished');
+        }
+        if (!body && title === getText('timerFinished')) {
+            body = localStorage.getItem('customTimerMessage') || getText('timerComplete');
         } else if (!body) {
-            body = 'Your timer has completed.';
+            body = getText('timerComplete');
         }
         
         const notification = new Notification(title, {
@@ -414,6 +428,7 @@ function saveToHistory(duration) {
     
     localStorage.setItem('timerHistory', JSON.stringify(history));
     loadHistory();
+    updateStatistics();
 }
 
 function loadHistory() {
@@ -438,7 +453,7 @@ function loadHistory() {
 }
 
 function clearHistory() {
-    if (confirm('Clear all timer history?')) {
+    if (confirm(getText('clearHistoryConfirm'))) {
         localStorage.removeItem('timerHistory');
         loadHistory();
     }
@@ -460,13 +475,13 @@ function togglePomodoroMode() {
 function startPomodoroSession() {
     if (pomodoroPhase === 'work') {
         totalSeconds = POMODORO_WORK;
-        pomodoroPhaseEl.textContent = 'Work';
+        pomodoroPhaseEl.textContent = getText('work');
     } else if (pomodoroPhase === 'shortBreak') {
         totalSeconds = POMODORO_SHORT_BREAK;
-        pomodoroPhaseEl.textContent = 'Short Break';
+        pomodoroPhaseEl.textContent = getText('shortBreak');
     } else {
         totalSeconds = POMODORO_LONG_BREAK;
-        pomodoroPhaseEl.textContent = 'Long Break';
+        pomodoroPhaseEl.textContent = getText('longBreak');
     }
     
     initialSeconds = 0;
@@ -477,10 +492,10 @@ function handlePomodoroPhaseEnd() {
     if (pomodoroPhase === 'work') {
         if (pomodoroSession % 4 === 0) {
             pomodoroPhase = 'longBreak';
-            alert('Great job! Time for a long break!');
+            alert(getText('longBreakTime'));
         } else {
             pomodoroPhase = 'shortBreak';
-            alert('Work session complete! Time for a short break.');
+            alert(getText('workComplete'));
         }
     } else {
         pomodoroPhase = 'work';
@@ -490,7 +505,7 @@ function handlePomodoroPhaseEnd() {
             pomodoroSession++;
         }
         pomodoroSessionEl.textContent = pomodoroSession;
-        alert('Break time over! Ready for the next work session?');
+        alert(getText('breakOver'));
     }
     
     startPomodoroSession();
@@ -499,6 +514,7 @@ function handlePomodoroPhaseEnd() {
 themeToggle.addEventListener('click', toggleTheme);
 pomodoroBtn.addEventListener('click', togglePomodoroMode);
 fullscreenBtn.addEventListener('click', toggleFullscreen);
+langToggle.addEventListener('click', toggleLanguage);
 
 savePresetBtn.addEventListener('click', saveCustomPreset);
 
@@ -558,18 +574,368 @@ function saveCustomMessage() {
     const message = customMessageInput.value.trim();
     if (message) {
         localStorage.setItem('customTimerMessage', message);
-        alert('Custom message saved!');
+        alert(getText('messageSaved'));
     } else {
         localStorage.removeItem('customTimerMessage');
-        alert('Custom message cleared!');
+        alert(getText('messageCleared'));
     }
+}
+
+function toggleLanguage() {
+    const newLang = currentLang === 'en' ? 'ja' : 'en';
+    setLanguage(newLang);
+    langToggle.textContent = newLang.toUpperCase();
+    
+    // Update Pomodoro phase text if in Pomodoro mode
+    if (pomodoroMode) {
+        if (pomodoroPhase === 'work') {
+            pomodoroPhaseEl.textContent = getText('work');
+        } else if (pomodoroPhase === 'shortBreak') {
+            pomodoroPhaseEl.textContent = getText('shortBreak');
+        } else {
+            pomodoroPhaseEl.textContent = getText('longBreak');
+        }
+    }
+    
+    // Reload custom presets to update "Use" button text
+    loadCustomPresets();
+    
+    // Update statistics to refresh the chart labels
+    updateStatistics();
+}
+
+function exportData() {
+    const data = {
+        version: '1.0',
+        exportDate: new Date().toISOString(),
+        settings: {
+            theme: localStorage.getItem('theme') || 'light',
+            language: localStorage.getItem('language') || 'en',
+            customMessage: localStorage.getItem('customTimerMessage') || '',
+            soundEnabled: soundEnabled.checked,
+            volume: volumeSlider.value,
+            soundTheme: soundTheme.value,
+            soundSelect: soundSelect.value
+        },
+        customPresets: JSON.parse(localStorage.getItem('customPresets') || '[]'),
+        timerHistory: JSON.parse(localStorage.getItem('timerHistory') || '[]')
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timer-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (data.version !== '1.0') {
+                alert('Incompatible file version');
+                return;
+            }
+            
+            if (confirm('This will replace all your current settings and data. Continue?')) {
+                // Import settings
+                if (data.settings) {
+                    if (data.settings.theme) {
+                        localStorage.setItem('theme', data.settings.theme);
+                        document.body.classList.toggle('dark-mode', data.settings.theme === 'dark');
+                        themeToggle.textContent = data.settings.theme === 'dark' ? '☀️' : '🌙';
+                    }
+                    
+                    if (data.settings.language) {
+                        localStorage.setItem('language', data.settings.language);
+                        setLanguage(data.settings.language);
+                        langToggle.textContent = data.settings.language.toUpperCase();
+                    }
+                    
+                    if (data.settings.customMessage !== undefined) {
+                        localStorage.setItem('customTimerMessage', data.settings.customMessage);
+                        customMessageInput.value = data.settings.customMessage;
+                    }
+                    
+                    if (data.settings.soundEnabled !== undefined) {
+                        soundEnabled.checked = data.settings.soundEnabled;
+                    }
+                    
+                    if (data.settings.volume !== undefined) {
+                        volumeSlider.value = data.settings.volume;
+                        volumeDisplay.textContent = data.settings.volume + '%';
+                    }
+                    
+                    if (data.settings.soundTheme) {
+                        soundTheme.value = data.settings.soundTheme;
+                    }
+                    
+                    if (data.settings.soundSelect) {
+                        soundSelect.value = data.settings.soundSelect;
+                    }
+                }
+                
+                // Import custom presets
+                if (data.customPresets) {
+                    localStorage.setItem('customPresets', JSON.stringify(data.customPresets));
+                    loadCustomPresets();
+                }
+                
+                // Import timer history
+                if (data.timerHistory) {
+                    localStorage.setItem('timerHistory', JSON.stringify(data.timerHistory));
+                    loadHistory();
+                }
+                
+                alert('Data imported successfully!');
+                updateStatistics();
+            }
+        } catch (error) {
+            alert('Error importing data: ' + error.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function getStatisticsData(period) {
+    const history = JSON.parse(localStorage.getItem('timerHistory') || '[]');
+    const now = new Date();
+    const data = [];
+    const labels = [];
+    
+    let startDate;
+    if (period === 'day') {
+        startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+        
+        // Create hourly buckets for the last 24 hours
+        for (let i = 0; i < 24; i++) {
+            labels.push(`${i}:00`);
+            data.push(0);
+        }
+        
+        // Aggregate data by hour
+        history.forEach(item => {
+            const itemDate = new Date(item.timestamp);
+            if (itemDate >= startDate && itemDate <= now) {
+                const hour = itemDate.getHours();
+                data[hour] += item.duration;
+            }
+        });
+    } else if (period === 'week') {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+        
+        // Create daily buckets for the last 7 days
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(now);
+            date.setDate(now.getDate() - i);
+            labels.push(days[date.getDay()]);
+            data.push(0);
+        }
+        
+        // Aggregate data by day
+        history.forEach(item => {
+            const itemDate = new Date(item.timestamp);
+            if (itemDate >= startDate && itemDate <= now) {
+                const daysDiff = Math.floor((now - itemDate) / (1000 * 60 * 60 * 24));
+                const index = 6 - daysDiff;
+                if (index >= 0 && index < 7) {
+                    data[index] += item.duration;
+                }
+            }
+        });
+    } else if (period === 'month') {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 29);
+        startDate.setHours(0, 0, 0, 0);
+        
+        // Create daily buckets for the last 30 days
+        for (let i = 29; i >= 0; i--) {
+            const date = new Date(now);
+            date.setDate(now.getDate() - i);
+            labels.push(`${date.getMonth() + 1}/${date.getDate()}`);
+            data.push(0);
+        }
+        
+        // Aggregate data by day
+        history.forEach(item => {
+            const itemDate = new Date(item.timestamp);
+            if (itemDate >= startDate && itemDate <= now) {
+                const daysDiff = Math.floor((now - itemDate) / (1000 * 60 * 60 * 24));
+                const index = 29 - daysDiff;
+                if (index >= 0 && index < 30) {
+                    data[index] += item.duration;
+                }
+            }
+        });
+    }
+    
+    // Convert seconds to minutes for display
+    const dataInMinutes = data.map(seconds => Math.round(seconds / 60));
+    
+    return { labels, data: dataInMinutes };
+}
+
+function drawChart(labels, data) {
+    const canvas = statsChart;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+    
+    // Set up chart dimensions
+    const padding = 40;
+    const chartWidth = width - 2 * padding;
+    const chartHeight = height - 2 * padding;
+    
+    // Find max value for scaling
+    const maxValue = Math.max(...data, 1); // Ensure at least 1 to avoid division by zero
+    
+    // Draw axes
+    ctx.strokeStyle = document.body.classList.contains('dark-mode') ? '#666' : '#ccc';
+    ctx.lineWidth = 1;
+    
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, height - padding);
+    ctx.stroke();
+    
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, height - padding);
+    ctx.lineTo(width - padding, height - padding);
+    ctx.stroke();
+    
+    // Draw bars
+    const barWidth = chartWidth / labels.length;
+    const barPadding = barWidth * 0.2;
+    
+    ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#4a90e2' : '#3498db';
+    
+    data.forEach((value, index) => {
+        const barHeight = (value / maxValue) * chartHeight;
+        const x = padding + index * barWidth + barPadding / 2;
+        const y = height - padding - barHeight;
+        
+        ctx.fillRect(x, y, barWidth - barPadding, barHeight);
+    });
+    
+    // Draw labels
+    ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#f0f0f0' : '#333';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    
+    // X-axis labels
+    labels.forEach((label, index) => {
+        if (currentStatsPeriod === 'day' && index % 4 !== 0) return; // Show every 4th hour
+        if (currentStatsPeriod === 'month' && index % 5 !== 0) return; // Show every 5th day
+        
+        const x = padding + index * barWidth + barWidth / 2;
+        const y = height - padding + 15;
+        
+        ctx.fillText(label, x, y);
+    });
+    
+    // Y-axis labels
+    ctx.textAlign = 'right';
+    const ySteps = 5;
+    for (let i = 0; i <= ySteps; i++) {
+        const value = Math.round((maxValue / ySteps) * i);
+        const y = height - padding - (i / ySteps) * chartHeight;
+        
+        ctx.fillText(`${value}m`, padding - 5, y + 3);
+    }
+}
+
+function updateStatistics() {
+    const history = JSON.parse(localStorage.getItem('timerHistory') || '[]');
+    const { labels, data } = getStatisticsData(currentStatsPeriod);
+    
+    // Draw chart
+    drawChart(labels, data);
+    
+    // Calculate summary statistics
+    let totalSessions = 0;
+    let totalTime = 0;
+    
+    const now = new Date();
+    let startDate;
+    
+    if (currentStatsPeriod === 'day') {
+        startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+    } else if (currentStatsPeriod === 'week') {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+    } else {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 29);
+        startDate.setHours(0, 0, 0, 0);
+    }
+    
+    history.forEach(item => {
+        const itemDate = new Date(item.timestamp);
+        if (itemDate >= startDate && itemDate <= now) {
+            totalSessions++;
+            totalTime += item.duration;
+        }
+    });
+    
+    // Update summary display
+    document.getElementById('totalSessions').textContent = totalSessions;
+    
+    const totalHours = Math.floor(totalTime / 3600);
+    const totalMinutes = Math.floor((totalTime % 3600) / 60);
+    document.getElementById('totalTime').textContent = `${totalHours}h ${totalMinutes}m`;
+    
+    const avgTime = totalSessions > 0 ? Math.round(totalTime / totalSessions / 60) : 0;
+    document.getElementById('avgSession').textContent = `${avgTime}m`;
 }
 
 saveMessageBtn.addEventListener('click', saveCustomMessage);
 
+exportBtn.addEventListener('click', exportData);
+importBtn.addEventListener('click', () => importFile.click());
+importFile.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        importData(e.target.files[0]);
+    }
+});
+
+document.querySelectorAll('.stats-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelector('.stats-btn.active').classList.remove('active');
+        btn.classList.add('active');
+        currentStatsPeriod = btn.dataset.period;
+        updateStatistics();
+    });
+});
+
 initTheme();
-loadCustomPresets();
-loadHistory();
-loadCustomMessage();
-updateDisplay();
-requestNotificationPermission();
+
+// Initialize language
+const savedLang = localStorage.getItem('language') || 'en';
+currentLang = savedLang;
+langToggle.textContent = savedLang.toUpperCase();
+
+// Wait for DOM to be ready for language initialization
+setTimeout(() => {
+    updateUI();
+    loadCustomPresets();
+    loadHistory();
+    loadCustomMessage();
+    updateDisplay();
+    requestNotificationPermission();
+    updateStatistics();
+}, 100);
